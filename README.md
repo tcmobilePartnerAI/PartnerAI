@@ -54,6 +54,7 @@ https://slack.com/
   https://git-scm.com/download/win
   1. DLしたインストーラー(exe)を実行
   1. インストーラーの仰せのままにインストール
+  1. 
 
 ## Go  
 - Windows10想定
@@ -95,6 +96,7 @@ go version go1.10.2 windows/amd64
 ```
   1. 今回必要なパッケージを導入
 ```
+set PATH=%PATH%C:\Program Files\Git\bin;
 go get -u github.com/nlopes/slack
 go get -u github.com/christianrondeau/go-wit
 ```
@@ -113,7 +115,7 @@ go get -u github.com/christianrondeau/go-wit
 ```
 cd
 cd work
-git clone git@gitlab.com:n.matsushige/talk-with-wit.ai.git
+git clone git@git.tmlab.jp:n.matsushige/talk_with_witai.git
 ```
   1. Cloneできてるか確認
 ```
@@ -129,6 +131,10 @@ set WIT_AI_ACCESS_TOKEN=WWWWW
 ```
 SSSSS : Slackのbotの"API Token"
 WWWWW : Wit.aiの"Server Access Token"
+  1. 作業フォルダへ移動 
+```
+cd Clone先のフォルダ
+```
   1. 実行
 ```
 go run main.go
