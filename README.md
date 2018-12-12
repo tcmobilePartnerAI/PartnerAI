@@ -54,10 +54,9 @@ https://slack.com/
   https://git-scm.com/download/win
   1. DLしたインストーラー(exe)を実行
   1. インストーラーの仰せのままにインストール
-  1. 
 
 ## Go  
-- Windows10想定
+### Windows10想定
 - 参考  
 https://qiita.com/yoskeoka/items/0dcc62a07bf5eb48dc4b
 
@@ -96,11 +95,40 @@ go version go1.10.2 windows/amd64
 ```
   1. 今回必要なパッケージを導入
 ```
-set PATH=%PATH%C:\Program Files\Git\bin;
 go get -u github.com/nlopes/slack
 go get -u github.com/christianrondeau/go-wit
 ```
 
+### mac想定
+- 参考  
+https://qiita.com/balius_1064/items/ac7dff5ef10eaf69996f
+https://qiita.com/Noah0x00/items/63e024f9b5a27276401b
+
+- 手順
+  1. ターミナル を起動
+  2. homebrewインストール　
+```
+https://qiita.com/balius_1064/items/ac7dff5ef10eaf69996f
+```
+  3. goインストール　
+```
+https://qiita.com/Noah0x00/items/63e024f9b5a27276401b
+```
+
+    1. goコマンドのバージョンを確認する
+```
+go version
+```
+下記のように表示されたらOK  
+※バージョンはその時点の最新となります。
+```
+go version go1.10.2 windows/amd64
+```
+    2. 今回必要なパッケージを導入
+```
+go get -u github.com/nlopes/slack
+go get -u github.com/christianrondeau/go-wit
+```
 ---
 
 # 実行
@@ -115,7 +143,7 @@ go get -u github.com/christianrondeau/go-wit
 ```
 cd
 cd work
-git clone git@git.tmlab.jp:n.matsushige/talk_with_witai.git
+git clone git@gitlab.com:n.matsushige/talk-with-wit.ai.git
 ```
   1. Cloneできてるか確認
 ```
@@ -124,17 +152,20 @@ ls -lR talk_with_witai
 ソースが取得できてればOK
   1. コマンドプロンプト起動
   1. 環境変数設定
+* windowsの場合
 ```
 set PATH=%PATH%C:\Program Files\Git\bin;
 set SLACK_ACCESS_TOKEN=SSSSS
 set WIT_AI_ACCESS_TOKEN=WWWWW
 ```
+* macの場合(動作確認はしていないので、もし違うようなら修正お願いします。)
+```
+export SLACK_ACCESS_TOKEN="SSSSS"
+export WIT_AI_ACCESS_TOKEN="WWWWW"
+```
+
 SSSSS : Slackのbotの"API Token"
 WWWWW : Wit.aiの"Server Access Token"
-  1. 作業フォルダへ移動 
-```
-cd Clone先のフォルダ
-```
   1. 実行
 ```
 go run main.go
