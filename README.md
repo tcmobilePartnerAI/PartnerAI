@@ -106,11 +106,11 @@ https://qiita.com/Noah0x00/items/63e024f9b5a27276401b
 
 - 手順
   1. ターミナル を起動
-  2. homebrewインストール　
+  1. homebrewインストール　
 ```
 https://qiita.com/balius_1064/items/ac7dff5ef10eaf69996f
 ```
-  3. goインストール　
+  1. goインストール　
 ```
 https://qiita.com/Noah0x00/items/63e024f9b5a27276401b
 ```
@@ -143,8 +143,12 @@ go get -u github.com/christianrondeau/go-wit
 ```
 cd
 cd work
-git clone git@gitlab.com:n.matsushige/talk-with-wit.ai.git
+git clone https://github.com/tcmobilePartnerAI/PartnerAI.git
 ```
+  開発用は以下になります。（今回は使用しません）
+  git clone git@gitlab.com:n.matsushige/talk-with-wit.ai.git
+
+
   1. Cloneできてるか確認
 ```
 ls -lR talk_with_witai
