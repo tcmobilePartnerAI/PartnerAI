@@ -39,6 +39,8 @@ https://slack.com/
   1. Apps作る
     1. 下記URLへアクセス
     https://ワークスペース名.slack.com/apps/manage
+    今回は
+    https://partnerai2018.slack.com/apps/manage
     1. 上部の"Search App Directory"に`bots`と入力して検索
     1. "Bots"を選択
     1. "Add Configuration"をクリック
@@ -162,7 +164,7 @@ set PATH=%PATH%C:\Program Files\Git\bin;
 set SLACK_ACCESS_TOKEN=SSSSS
 set WIT_AI_ACCESS_TOKEN=WWWWW
 ```
-* macの場合(動作確認はしていないので、もし違うようなら修正お願いします。)
+* macの場合
 ```
 export SLACK_ACCESS_TOKEN="SSSSS"
 export WIT_AI_ACCESS_TOKEN="WWWWW"
