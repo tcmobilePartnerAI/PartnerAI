@@ -1,0 +1,21 @@
+「今回使用するwit.aiトークン」
+みんなの彼女：2WYZ7MRJGAPMLDU7N6CXK52GG4XH4NYT
+
+「Windowsの場合」
+set SLACK_ACCESS_TOKEN=SSSSS
+set WIT_AI_ACCESS_TOKEN=WWWWW
+
+SSSSS : Slackのbotの"API Token"
+WWWWW : Wit.aiの"Server Access Token"
+
+「macの場合」
+export SLACK_ACCESS_TOKEN="SSSSS"
+export WIT_AI_ACCESS_TOKEN="WWWWW"
+
+!!macの場合はSSSSSの前後に""ダブルクオーテーションを付けることに注意!!
+
+SSSSS : Slackのbotの"API Token"
+WWWWW : Wit.aiの"Server Access Token"
+
+
+

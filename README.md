@@ -169,9 +169,9 @@ set WIT_AI_ACCESS_TOKEN=WWWWW
 export SLACK_ACCESS_TOKEN="SSSSS"
 export WIT_AI_ACCESS_TOKEN="WWWWW"
 ```
-
-SSSSS : Slackのbotの"API Token"
-WWWWW : Wit.aiの"Server Access Token"
+* SSSSS : Slackのbotの"API Token"
+* WWWWW : Wit.aiの"Server Access Token"
+* 「みんなの彼女」のwit.aiトークン：WIT_AI_ACCESS_TOKEN=2WYZ7MRJGAPMLDU7N6CXK52GG4XH4NYT
   1. 実行
 ```
 go run main.go
