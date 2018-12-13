@@ -102,7 +102,7 @@ func createReplyMessge(ev *slack.MessageEvent, result *wit.MessageResponse) (tex
     } else if v, ok := topEntityValues["when"]; v != nil && ok {
       text = slack.MsgOptionText("私、" + v.(string) + "は忙しい。。。", false)
     }
-  // ここに新しいインテントのcase文を追加してください 
+  // ここに新しいインテントのcase文を追加してください
   }
 
   // 名前付き戻り値を使うと"return text"と書かなくもて、textを返してくれます

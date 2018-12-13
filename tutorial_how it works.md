@@ -1,35 +1,37 @@
 # AI彼女 go側の仕組み
 
 ## ざっくりいうと
+
 ```
 func main() {
-	slackClient = slack.New(os.Getenv("SLACK_ACCESS_TOKEN"))
-	witClient = wit.NewClient(os.Getenv("WIT_AI_ACCESS_TOKEN"))
+  // 環境変数から各サービスに接続するためのトークン情報を取得
+  slackClient = slack.New(os.Getenv("SLACK_ACCESS_TOKEN"))
+  witClient = wit.NewClient(os.Getenv("WIT_AI_ACCESS_TOKEN"))
 
-	// (1)Slackからのメッセージを受信
-	fmt.Printf("%s\n", "Connecting to Slack...")
-	rtm := slackClient.NewRTM() //RTM is "Real Time Messaging"
-	go rtm.ManageConnection()
-	fmt.Printf("%s\n", "... Connected.")
+  // (1)Slackからのメッセージを受信
+  rtm := slackClient.NewRTM() //RTM is "Real Time Messaging"
+  go rtm.ManageConnection()
 
-	for msg := range rtm.IncomingEvents {
-    	// (2)Slackからのメッセージを判定
-    	ev := pickUpSlackMessageEvent(msg)
-    	if ev != nil {
-	    	fmt.Printf("ev : %s\n\n", ev)
-      		// (3)Wit.aiへメッセージを転送して、解析結果を受信
-      		messageResponse := sendAndReceiveWithWit(ev)
-      		if messageResponse != nil {
-	    		fmt.Printf("messageResponse : %s\n\n", messageResponse)
-        		// (4)Slackへ返信するメッセージを作成
-        		message := createReplyMessge(ev, messageResponse)
-        		// (5)Slackへ返信
-        		go replyToSlack(ev, message)
-      		}
-    	}
-	}
+  for msg := range rtm.IncomingEvents {
+    // (2)Slackからのメッセージを判定
+    if ev, ok := pickUpSlackMessageEvent(msg); ok {
+      fmt.Printf("[Slackからのメッセージ内容]\n%v\n\n", ev)
+
+      // (3)Wit.aiへメッセージを転送して、解析結果を受信
+      if messageResponse, err := witClient.Message(ev.Msg.Text); err == nil {
+        fmt.Printf("[Wit.aiからの返答内容]\n%v\n\n", messageResponse)
+
+        // (4)Slackへ返信するメッセージを作成
+        message := createReplyMessge(ev, messageResponse)
+
+        // (5)Slackへ返信
+        go replyToSlack(ev, message)
+      }
+    }
+  }
 }
 ```
+
 - (1)slackからイベントを受信できるようにして
 - (2)受け取ったらどんなメッセージか判定して
 - (3)wit.aiに解析を依頼して
@@ -42,38 +44,43 @@ func main() {
 ### (1)slackからイベントを受信できるようにして
 
 ```
-slackClient = slack.New(os.Getenv("SLACK_ACCESS_TOKEN"))
-witClient = wit.NewClient(os.Getenv("WIT_AI_ACCESS_TOKEN"))
+  // 環境変数から各サービスに接続するためのトークン情報を取得
+  slackClient = slack.New(os.Getenv("SLACK_ACCESS_TOKEN"))
+  witClient = wit.NewClient(os.Getenv("WIT_AI_ACCESS_TOKEN"))
 
-// (1)Slackからのメッセージを受信
-fmt.Printf("%s\n", "Connecting to Slack...")
-rtm := slackClient.NewRTM() //RTM is "Real Time Messaging"
-go rtm.ManageConnection()
-fmt.Printf("%s\n", "... Connected.")
+  // (1)Slackからのメッセージを受信
+  rtm := slackClient.NewRTM() //RTM is "Real Time Messaging"
+  go rtm.ManageConnection()
 
-for msg := range rtm.IncomingEvents {
-	中略
-}
+  for msg := range rtm.IncomingEvents {
+	  中略
+  }
 ```
+
 この部分です。  
 BOTにメッセージを送信したらfor文の中の処理が行われます
 
 ### (2)受け取ったらどんなメッセージか判定して
+
 ```
 // (2)
-func pickUpSlackMessageEvent(msg slack.RTMEvent) *slack.MessageEvent{
-	switch ev := msg.Data.(type) {
-	case *slack.MessageEvent:
-	  fmt.Printf("ev.BotID : %s\n\n", ev.BotID)
+func pickUpSlackMessageEvent(msg slack.RTMEvent) (*slack.MessageEvent, bool){
+  switch ev := msg.Data.(type) {
+  case *slack.ConnectedEvent:
+    fmt.Printf("Connected to Slack : %v\n", ev.Info)
+  case *slack.MessageEvent:
+    // SlackのBotが色々メッセージ送ってるのは無視します
     if len(ev.BotID) == 0 {
-      return ev
+      // 複数の戻り値を返せます！
+      return ev, true
      }
-    return nil
-  default:
-    return nil
-	}
+  }
+
+  // 複数の戻り値を返せます！
+  return nil, false
 }
 ```
+
 この部分です。  
 slackから受信するイベントにはいろいろな種類がありますが、  
 `MessagkeEvent`というのがメッセージを受信した時のイベントタイプとなります。  
@@ -82,15 +89,10 @@ slackから受信するイベントにはいろいろな種類がありますが
 ### (3)wit.aiに解析を依頼して
 
 ```
-// (3)
-func sendAndReceiveWithWit(ev *slack.MessageEvent) *wit.MessageResponse{
-	result, err := witClient.Message(ev.Msg.Text)
-	if err != nil {
-		return nil
-	}
-  return result
-}
+      // (3)Wit.aiへメッセージを転送して、解析結果を受信
+      if messageResponse, err := witClient.Message(ev.Msg.Text); err == nil {
 ```
+
 この部分です  
 wit.aiにリクエストを投げているだけです。
 もしエラーがあった場合は何も返さないようにしています。
@@ -99,39 +101,42 @@ wit.aiにリクエストを投げているだけです。
 
 ```
 // (4)
-func createReplyMessge(ev *slack.MessageEvent, result *wit.MessageResponse) slack.MsgOption {
-	var (
-    intent          interface{}
-    food            interface{}
-    where           interface{}
-	)
+func createReplyMessge(ev *slack.MessageEvent, result *wit.MessageResponse) (text slack.MsgOption) {
+  var (
+    intent interface{}
+  )
 
-	for key, entityList := range result.Entities {
-		for _, entity := range entityList {
+  topEntityConfidences :=  make(map[string]float64)
+  topEntityValues :=  make(map[string]interface{})
+
+  for key, entityList := range result.Entities {
+    topEntityConfidences[key] = 0
+    topEntityValues[key] = nil
+    for _, entity := range entityList {
       if key == "intent" {
         intent = entity.Value
       }
-      if key == "food" {
-        food = entity.Value
+
+      if entity.Confidence > confidenceThreshold && entity.Confidence > topEntityConfidences[key] {
+        topEntityConfidences[key] = entity.Confidence
+        topEntityValues[key] = entity.Value
       }
-      if key == "where" {
-        where = entity.Value
-      }
-		}
+    }
   }
 
-	text := slack.MsgOptionText("¯\\_(o_o)_/¯", false)
+  text = slack.MsgOptionText("¯\\_(o_o)_/¯", false)
 
-	switch intent {
-	case "want eat":
-		text = slack.MsgOptionText("私はあんまり" + food.(string) + "すきじゃない。。。", false)
-	case "want go":
-		text = slack.MsgOptionText("へぇ、" + where.(string) + "行きたいんだ。一人で行けば。", false)
-	}
+  switch intent {
+  case "want eat":
+	  中略
+  // ここに新しいインテントのcase文を追加してください 
+  }
 
-  return text
+  // 名前付き戻り値を使うと"return text"と書かなくもて、textを返してくれます
+  return
 }
 ```
+
 この部分です  
 witは解析結果として連想配列のようなものを返します  
 わかりづらいと思うので具体例を挙げて説明します。  
@@ -153,13 +158,13 @@ intentの種類で返答のメッセージを出し分けています
 ```
 // (5)
 func replyToSlack(ev *slack.MessageEvent, message slack.MsgOption) {
-	params := slack.MsgOptionPostMessageParameters(slack.PostMessageParameters{
-		AsUser: true,
-	})
-	slackClient.PostMessage(ev.User, message, params)
+  params := slack.MsgOptionPostMessageParameters(slack.PostMessageParameters{
+    AsUser: true,
+  })
+  slackClient.PostMessage(ev.User, message, params)
 }
-
 ```
+
 です  
 引き数の`message`に(4)で設定したメッセージが格納されています。
 ここではメッセージを送信してきたユーザー(`ev.User`)にメッセージを返信しています。  
@@ -188,26 +193,35 @@ witの学習方法は別途冨永君あたりが説明してくれるかと思�
 
 で
 ```
-switch intent {
-case "want eat":
-	text = slack.MsgOptionText("私はあんまり" + food.(string) + "すきじゃない。。。", false)
-case "want go":
-	text = slack.MsgOptionText("へぇ、" + where.(string) + "行きたいんだ。一人で行けば。", false)
-}
+  switch intent {
+  case "want eat":
+    text = slack.MsgOptionText("私はあんまり。。。", false)
+    if v, ok := topEntityValues["food"]; v != nil && ok {
+      text = slack.MsgOptionText("私はあんまり" + v.(string) + "好きじゃない。。。", false)
+    } else if v, ok := topEntityValues["when"]; v != nil && ok {
+      text = slack.MsgOptionText("私、" + v.(string) + "は忙しい。。。", false)
+    }
+  case "want go":
+    text = slack.MsgOptionText("一人で行けば。", false)
+    if v, ok := topEntityValues["where"]; v != nil && ok {
+      text = slack.MsgOptionText("へぇ、" + v.(string) + "行きたいんだ。一人で行けば。", false)
+    } else if v, ok := topEntityValues["when"]; v != nil && ok {
+      text = slack.MsgOptionText("私、" + v.(string) + "は忙しい。。。", false)
+    }
+  // ここに新しいインテントのcase文を追加してください
+  }
 ```
-この部分を
+この部分の
+`  // ここに新しいインテントのcase文を追加してください`
+に
 ```
-switch intent {
-case "want eat":
-	text = slack.MsgOptionText("私はあんまり" + food.(string) + "すきじゃない。。。", false)
-case "want go":
-	text = slack.MsgOptionText("へぇ、" + where.(string) + "行きたいんだ。一人で行けば。", false)
-case "invite go":
-	text = slack.MsgOptionText("いいね、" + where.(string) + "連れてって！", false)
-}
+  case "invite go":
+    if v, ok := topEntityValues["where"]; v != nil && ok {
+      text = slack.MsgOptionText("いいね、" + v.(string) + "連れてって！", false)
+    }
 ```
+を追加してください。
 
-としてください  
 それでslackで  
 「明日一緒に遊園地行こうよ」  
 と言ったら  
